@@ -7,6 +7,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 
+function errMsg(e: unknown) {
+  if (e instanceof Error) return e.message;
+  try { return JSON.stringify(e); } catch { return String(e); }
+}
+
 export default function AddItemPage() {
   const router = useRouter();
   const [name, setName] = useState("");
@@ -55,7 +60,7 @@ export default function AddItemPage() {
       return;
     }
 
-   // 2) optional: upload file to Storage
+   
 // 2) optional: upload file via server route using service key
 if (file) {
   try {
@@ -96,9 +101,9 @@ if (file) {
       setLoading(false);
       return;
     }
-  } catch (e: any) {
+  } catch (e: unknown) {
     console.error("[upload] unexpected error:", e);
-    setMsg(String(e?.message ?? e));
+    setMsg(errMsg(e));
     setLoading(false);
     return;
   }
