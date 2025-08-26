@@ -1,7 +1,9 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { supabase } from "@/lib/supabase";
+import { Plus } from "lucide-react";
 
 export default function SideNav() {
   const [open, setOpen] = useState(false);
@@ -38,23 +40,36 @@ export default function SideNav() {
             <p className="text-sm text-muted-foreground">Your closet, simplified.</p>
           </div>
 
+          {/* Add clothing button */}
           <div className="mb-4">
-            <input
-              className="w-full rounded-md border bg-background px-3 py-2 text-sm outline-none"
-              placeholder="Search"
-            />
+            <Link
+              href="/closet/add"
+              className="inline-flex w-full items-center justify-center gap-2 rounded-md bg-primary px-3 py-2 text-sm text-primary-foreground"
+            >
+              <Plus className="h-4 w-4" /> Add Item
+            </Link>
           </div>
 
           <nav className="space-y-1 text-sm">
-            <a href="/closet" className="flex items-center gap-2 rounded-md px-3 py-2 hover:bg-accent">
+            <a
+              href="/closet"
+              className="flex items-center gap-2 rounded-md px-3 py-2 hover:bg-accent"
+            >
               <span>Dashboard</span>
             </a>
             <div className="mt-3">
-              <div className="px-3 py-2 text-xs uppercase tracking-wide text-muted-foreground">Workspace</div>
-              <a href="/closet" className="block rounded-md px-3 py-2 hover:bg-accent">Overview</a>
-              <a href="/closet" className="block rounded-md px-3 py-2 hover:bg-accent">Settings</a>
-              <a href="/closet" className="block rounded-md px-3 py-2 hover:bg-accent">Members</a>
-              <a href="/closet" className="block rounded-md px-3 py-2 hover:bg-accent">Integrations</a>
+              <div className="px-3 py-2 text-xs uppercase tracking-wide text-muted-foreground">
+                Categories
+              </div>
+              <a href="/closet/tops" className="block rounded-md px-3 py-2 hover:bg-accent">
+                Tops
+              </a>
+              <a href="/closet/bottoms" className="block rounded-md px-3 py-2 hover:bg-accent">
+                Bottoms
+              </a>
+              <a href="/closet/shoes" className="block rounded-md px-3 py-2 hover:bg-accent">
+                Shoes
+              </a>
             </div>
           </nav>
         </div>
