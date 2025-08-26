@@ -4,6 +4,11 @@ import { createClient } from "@supabase/supabase-js";
 export const runtime = "nodejs";          // need Node for File -> Buffer
 export const dynamic = "force-dynamic";   // avoid caching
 
+function errorMessage(e: unknown) {
+  if (e instanceof Error) return e.message;
+  try { return JSON.stringify(e); } catch { return String(e); }
+}
+
 export async function POST(req: Request) {
   try {
     const form = await req.formData();
@@ -35,7 +40,7 @@ export async function POST(req: Request) {
     const buffer = Buffer.from(arrayBuffer);
 
     const bucket = "clothes";
-    // RLS policies (if any) don’t matter here; service role bypasses RLS.
+    // Service role bypasses RLS.
     const path = `${userId}/${filename}`;
 
     const { error: uploadErr } = await supabase.storage
@@ -55,9 +60,9 @@ export async function POST(req: Request) {
 
     const { data: pub } = supabase.storage.from(bucket).getPublicUrl(path);
     return NextResponse.json({ publicUrl: pub.publicUrl, path });
-  } catch (e: any) {
+  } catch (e: unknown) {
     return NextResponse.json(
-      { error: e?.message ?? "Unknown error", where: "handler" },
+      { error: errorMessage(e), where: "handler" },
       { status: 500 }
     );
   }
