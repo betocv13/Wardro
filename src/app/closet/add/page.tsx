@@ -6,6 +6,7 @@ import { supabase } from "@/lib/supabase";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
+import { usePaletteFromImage } from "@/hooks/usePaletteFromImage";
 
 function errMsg(e: unknown) {
   if (e instanceof Error) return e.message;
@@ -20,6 +21,15 @@ export default function AddItemPage() {
   const [preview, setPreview] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
+  const [palette, imgRef] = usePaletteFromImage(preview, {
+    maxColors: 4,
+    paletteSize: 12,
+    quality: 5,
+  });
+
+  const paletteReady = !preview || palette.length > 0;
+
+  const canSubmit = !!preview && paletteReady && !loading;
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
@@ -27,8 +37,16 @@ export default function AddItemPage() {
     });
   }, [router]);
 
+  // add cleanup so we don't leak object URLs
+  useEffect(() => {
+    return () => {
+      if (preview) URL.revokeObjectURL(preview);
+    };
+  }, [preview]);
+
   function onFileChange(e: ChangeEvent<HTMLInputElement>) {
     const f = e.target.files?.[0] ?? null;
+    if (preview) URL.revokeObjectURL(preview);
     setFile(f);
     setPreview(f ? URL.createObjectURL(f) : null);
   }
@@ -49,7 +67,7 @@ export default function AddItemPage() {
     // 1) create DB row first (get item id)
     const { data: insertData, error: insertErr } = await supabase
       .from("clothes")
-      .insert([{ user_id: userId, name: name.trim(), type }])
+      .insert([{ user_id: userId, name: name.trim(), type, palette: palette && palette.length ? palette : null, }])
       .select("id")
       .single();
 
@@ -60,54 +78,54 @@ export default function AddItemPage() {
       return;
     }
 
-   
-// 2) optional: upload file via server route using service key
-if (file) {
-  try {
-    // Safe, unique filename; preserve extension
-    const orig = file.name || "image";
-    const ext = orig.includes(".") ? orig.split(".").pop() : "png";
-    const safeName = `${Date.now()}.${(ext || "png").toLowerCase()}`;
 
-    console.log("[upload] starting via API", { userId, safeName, type: file.type, size: file.size });
+    // 2) optional: upload file via server route using service key
+    if (file) {
+      try {
+        // Safe, unique filename; preserve extension
+        const orig = file.name || "image";
+        const ext = orig.includes(".") ? orig.split(".").pop() : "png";
+        const safeName = `${Date.now()}.${(ext || "png").toLowerCase()}`;
 
-    const fd = new FormData();
-    fd.append("file", file);
-    fd.append("userId", userId);
-    fd.append("filename", safeName);
+        console.log("[upload] starting via API", { userId, safeName, type: file.type, size: file.size });
 
-    const res = await fetch("/api/upload", {
-      method: "POST",
-      body: fd,
-    });
+        const fd = new FormData();
+        fd.append("file", file);
+        fd.append("userId", userId);
+        fd.append("filename", safeName);
 
-    if (!res.ok) {
-      const j = await res.json().catch(() => ({}));
-      throw new Error(j?.error || `Upload failed with ${res.status}`);
+        const res = await fetch("/api/upload", {
+          method: "POST",
+          body: fd,
+        });
+
+        if (!res.ok) {
+          const j = await res.json().catch(() => ({}));
+          throw new Error(j?.error || `Upload failed with ${res.status}`);
+        }
+
+        const { publicUrl } = await res.json();
+        console.log("[upload] success; publicUrl:", publicUrl);
+
+        const { error: updErr } = await supabase
+          .from("clothes")
+          .update({ image_url: publicUrl })
+          .eq("id", insertData.id)
+          .eq("user_id", userId);
+
+        if (updErr) {
+          console.error("[db] update image_url failed:", updErr);
+          setMsg(`Saved item but failed to save image URL: ${updErr.message}`);
+          setLoading(false);
+          return;
+        }
+      } catch (e: unknown) {
+        console.error("[upload] unexpected error:", e);
+        setMsg(errMsg(e));
+        setLoading(false);
+        return;
+      }
     }
-
-    const { publicUrl } = await res.json();
-    console.log("[upload] success; publicUrl:", publicUrl);
-
-    const { error: updErr } = await supabase
-      .from("clothes")
-      .update({ image_url: publicUrl })
-      .eq("id", insertData.id)
-      .eq("user_id", userId);
-
-    if (updErr) {
-      console.error("[db] update image_url failed:", updErr);
-      setMsg(`Saved item but failed to save image URL: ${updErr.message}`);
-      setLoading(false);
-      return;
-    }
-  } catch (e: unknown) {
-    console.error("[upload] unexpected error:", e);
-    setMsg(errMsg(e));
-    setLoading(false);
-    return;
-  }
-}
 
     setMsg("Item added!");
     router.replace("/closet");
@@ -159,7 +177,18 @@ if (file) {
           )}
         </div>
 
-        <Button type="submit" disabled={loading} className="w-full">
+        {preview && (
+          <img
+            ref={imgRef}
+            src={preview}
+            alt=""
+            className="hidden"
+            aria-hidden="true"
+            decoding="async"
+          />
+        )}
+
+        <Button type="submit" disabled={!canSubmit} className="w-full">
           {loading ? "Adding…" : "Add Item"}
         </Button>
       </form>

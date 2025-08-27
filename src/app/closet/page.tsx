@@ -53,6 +53,7 @@ export default function ClosetPage() {
                 type={it.type}
                 created_at={it.created_at}
                 image_url={it.image_url}
+                palette={it.palette} 
                 priority={idx < 3}
               />
             </li>
