@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import { Plus } from "lucide-react";
+import ThemeToggle from "@/components/ThemeToggle";
 
 export default function SideNav() {
   const [open, setOpen] = useState(false);
@@ -36,7 +37,7 @@ export default function SideNav() {
       >
         <div className="flex-1 overflow-y-auto px-3 py-4">
           <div className="mb-4 px-2">
-            <div className="text-xl font-bold">👕 Wardro</div>
+            <div className="text-xl font-bold">Wardro</div>
             <p className="text-sm text-muted-foreground">Your closet, simplified.</p>
           </div>
 
@@ -74,6 +75,10 @@ export default function SideNav() {
           </nav>
         </div>
 
+        <div className="mt-auto p-3">
+        <ThemeToggle />
+      </div>
+      
         <div className="border-t p-3">
           <button
             onClick={handleLogout}

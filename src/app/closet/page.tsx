@@ -13,10 +13,10 @@ export default function ClosetPage() {
   }
 
   return (
-    <main className="max-w-5xl mx-auto p-6 space-y-6">
+    <main className="p-6 space-y-4">
       <div className="flex items-center justify-between gap-3">
         <div>
-          <h1 className="text-3xl font-bold">👕 Your Closet</h1>
+          <h1 className="text-3xl font-bold">Your Closet</h1>
           {email && (
             <p className="text-sm text-muted-foreground">
               Signed in as <strong>{email}</strong>

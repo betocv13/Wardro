@@ -4,5 +4,5 @@
 import ClothingTypePage from "@/components/ClothingTypePage";
 
 export default function TopsPage() {
-  return <ClothingTypePage title="Bottom" filterType="bottom" />;
+  return <ClothingTypePage title="Bottoms" filterType="bottom" />;
 }
