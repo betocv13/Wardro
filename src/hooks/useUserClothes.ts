@@ -14,6 +14,7 @@ export type ClothingItem = {
   type: ItemType;
   created_at: string;
   image_url: string | null;
+  palette?: string[] | null;
 };
 
 function errMsg(e: unknown) {
@@ -47,7 +48,7 @@ export function useUserClothes(filterType?: "top" | "bottom" | "shoes") {
 
       let query = supabase
         .from("clothes")
-        .select("id,user_id,name,type,created_at,image_url")
+        .select("id,user_id,name,type,created_at,image_url,palette")
         .eq("user_id", user.id)
         .order("created_at", { ascending: false });
 
