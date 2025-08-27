@@ -169,6 +169,7 @@ export default function AddItemPage() {
           <Label htmlFor="photo">Photo (optional)</Label>
           <Input id="photo" type="file" accept="image/*" onChange={onFileChange} />
           {preview && (
+            /* eslint-disable-next-line @next/next/no-img-element */
             <img
               src={preview}
               alt="preview"
@@ -178,6 +179,7 @@ export default function AddItemPage() {
         </div>
 
         {preview && (
+          /* eslint-disable-next-line @next/next/no-img-element */
           <img
             ref={imgRef}
             src={preview}
