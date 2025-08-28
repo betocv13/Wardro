@@ -23,8 +23,9 @@ export async function POST(req: Request) {
       );
     }
 
-    const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const serviceKey = process.env.SUPABASE_SERVICE_ROLE;
+    const url = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const serviceKey =
+        process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_ROLE;
 
     if (!url || !serviceKey) {
       return NextResponse.json(
@@ -39,7 +40,7 @@ export async function POST(req: Request) {
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
 
-    const bucket = "clothes";
+    const bucket = process.env.SUPABASE_STORAGE_BUCKET ?? "clothes";
     // Service role bypasses RLS.
     const path = `${userId}/${filename}`;
 

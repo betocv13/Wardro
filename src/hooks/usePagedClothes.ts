@@ -16,6 +16,11 @@ export type ClothingItem = {
   palette?: string[] | null;
 };
 
+function dedupeById<T extends { id: string }>(arr: T[]) {
+  const seen = new Set<string>();
+  return arr.filter(x => (seen.has(x.id) ? false : (seen.add(x.id), true)));
+}
+
 type Options = {
   filterType?: "top" | "bottom" | "shoes";
   pageSize?: number;
@@ -51,7 +56,8 @@ export function usePagedClothes({ filterType, pageSize = 6 }: Options = {}) {
           .select("id,user_id,name,type,created_at,image_url,palette")
           .eq("user_id", session.user.id)
           .order("created_at", { ascending: false })
-          .range(from, to);
+            .order("id", { ascending: false })
+            .range(from, to);
 
         if (filterType) query = query.eq("type", filterType);
 
@@ -60,7 +66,7 @@ export function usePagedClothes({ filterType, pageSize = 6 }: Options = {}) {
 
         const rows = data ?? [];
         setHasMore(rows.length === pageSize);
-        setItems(prev => (append ? [...prev, ...rows] : rows));
+        setItems(prev => (append ? dedupeById([...prev, ...rows]) : rows));
         setPage(pageIndex);
         setError(null);
       } catch (e: unknown) {
