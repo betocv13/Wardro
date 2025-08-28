@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import PalletRow from "@/components/PalletRow";
 
 export type ClothingCardProps = {
   id: string;
@@ -62,18 +63,12 @@ export default function ClothesCard({
 
       {/* Color swatches */}
       {swatches.length > 0 && (
-        <div className="mt-3 flex gap-2" aria-label="Color palette">
-          {swatches.map((hex, i) => (
-            <span
-              key={i}
-              className="h-4 w-4 rounded-full border"
-              title={hex}
-              style={{ backgroundColor: hex }}
-              aria-label={`Color swatch ${i + 1} ${hex}`}
-              role="img"
-            />
-          ))}
-        </div>
+          <PalletRow
+              colors={swatches}
+              dotSize={16}
+              gap={8}
+              className="mt-3"
+          />
       )}
     </div>
   );
