@@ -16,7 +16,7 @@ function errMsg(e: unknown) {
 export default function AddItemPage() {
   const router = useRouter();
   const [name, setName] = useState("");
-  const [type, setType] = useState<"top" | "bottom" | "shoes">("top");
+  const [type, setType] = useState<"top" | "bottom" | "shoes" | "accessories">("top");
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -154,14 +154,15 @@ export default function AddItemPage() {
         <div className="space-y-1">
           <Label htmlFor="type">Type</Label>
           <select
-            id="type"
-            className="w-full rounded-md border bg-background px-3 py-2 text-sm"
-            value={type}
-            onChange={(e) => setType(e.target.value as "top" | "bottom" | "shoes")}
+              id="type"
+              className="w-full rounded-md border bg-background px-3 py-2 text-sm"
+              value={type}
+              onChange={(e) => setType(e.target.value as "top" | "bottom" | "shoes")}
           >
             <option value="top">Top</option>
             <option value="bottom">Bottom</option>
             <option value="shoes">Shoes</option>
+            <option value="accessories">Accessories</option>
           </select>
         </div>
 
