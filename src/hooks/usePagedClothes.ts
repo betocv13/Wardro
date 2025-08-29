@@ -5,7 +5,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 
-export type ItemType = "top" | "bottom" | "shoes" | string;
+export type ItemType = "top" | "bottom" | "shoes" | "accessories";
 export type ClothingItem = {
   id: string;
   user_id: string;
@@ -22,7 +22,7 @@ function dedupeById<T extends { id: string }>(arr: T[]) {
 }
 
 type Options = {
-  filterType?: "top" | "bottom" | "shoes";
+  filterType?: "top" | "bottom" | "shoes" | "accessories";
   pageSize?: number;
 };
 

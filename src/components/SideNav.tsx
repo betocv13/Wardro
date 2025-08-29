@@ -56,22 +56,8 @@ export default function SideNav() {
               href="/closet"
               className="flex items-center gap-2 rounded-md px-3 py-2 hover:bg-accent"
             >
-              <span>Dashboard</span>
+              <span>Closet</span>
             </a>
-            <div className="mt-3">
-              <div className="px-3 py-2 text-xs uppercase tracking-wide text-muted-foreground">
-                Categories
-              </div>
-              <a href="/closet/tops" className="block rounded-md px-3 py-2 hover:bg-accent">
-                Tops
-              </a>
-              <a href="/closet/bottoms" className="block rounded-md px-3 py-2 hover:bg-accent">
-                Bottoms
-              </a>
-              <a href="/closet/shoes" className="block rounded-md px-3 py-2 hover:bg-accent">
-                Shoes
-              </a>
-            </div>
           </nav>
         </div>
 

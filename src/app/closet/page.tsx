@@ -1,12 +1,28 @@
 "use client";
 
 import Link from "next/link";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import ClothesCard from "@/components/clothescard";
 import { usePagedClothes } from "@/hooks/usePagedClothes";
+import FiltersComponent from "@/components/FiltersComponent";
 
 export default function ClosetPage() {
-  const {
+    type FilterType = "all" | "top" | "bottom" | "shoes" | "accessories";
+    const [filter, setFilter] = useState<FilterType>("all");
+
+    // right after const [filter, setFilter] = useState<FilterType>("all");
+    const titles: Record<FilterType, string> = {
+        all: "My Closet",
+        top: "Tops",
+        bottom: "Bottoms",
+        shoes: "Shoes",
+        accessories: "Accessories",
+    };
+
+    const title = titles[filter];
+
+    const {
     email,
     items,
     error,
@@ -14,18 +30,21 @@ export default function ClosetPage() {
     isFetchingNextPage,      // loading more pages
     hasMore,                 // whether more pages exist
     setSentinelRef,          // assign to a div at the bottom
-  } = usePagedClothes({ pageSize: 6 });
+  }= usePagedClothes({
+        pageSize: 6,
+        filterType: filter === "all" ? undefined : filter, // ✅ translate "all" to undefined for the hook
+    });
 
   // 2) Initial loading state
   if (isLoadingInitial) {
     return (
       <main className="p-6 space-y-4">
-        <div className="flex items-center justify-between gap-3">
-          <h1 className="text-3xl font-bold">Your Closet</h1>
-        </div>
+          <div className="flex items-center justify-between gap-3">
+              <h1 className="text-3xl font-bold">{title}</h1>
+          </div>
 
-        {/* simple skeletons */}
-        <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {/* simple skeletons */}
+          <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {Array.from({ length: 6 }).map((_, i) => (
             <li key={i} className="rounded-lg border p-4">
               <div className="mb-3 h-80 w-full rounded-md bg-muted/30 animate-pulse" />
@@ -40,15 +59,11 @@ export default function ClosetPage() {
   return (
     <main className="p-6 space-y-4">
       <div className="flex items-center justify-between gap-3">
-        <div>
-          <h1 className="text-3xl font-bold">Your Closet</h1>
-          {email && (
-            <p className="text-sm text-muted-foreground">
-              Signed in as <strong>{email}</strong>
-            </p>
-          )}
-        </div>
-        <div className="flex gap-2">
+          <div>
+              <h1 className="text-3xl font-bold">{title}</h1>
+          </div>
+          <div className="flex gap-2">
+          <FiltersComponent active={filter} onChange={setFilter} />
           <Button asChild>
             <Link href="/closet/add">+ Add Item</Link>
           </Button>
