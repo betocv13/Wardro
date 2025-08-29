@@ -95,6 +95,14 @@ export function usePagedClothes({ filterType, pageSize = 6 }: Options = {}) {
     await fetchPage(page + 1, true);
   }, [fetchPage, page, isFetchingNextPage, hasMore]);
 
+  const removeLocal = useCallback((id: string) => {
+    setItems(prev => prev.filter(it => it.id !== id));
+  }, []);
+
+  const restoreLocal = useCallback((snapshot: ClothingItem[]) => {
+    setItems(snapshot);
+  }, []);
+
   // IntersectionObserver glue
   const observerRef = useRef<IntersectionObserver | null>(null);
   const setSentinelRef = useCallback(
@@ -136,6 +144,9 @@ export function usePagedClothes({ filterType, pageSize = 6 }: Options = {}) {
     hasMore,
     loadMore,         // still exposed if you want a manual “Load more” button
     setSentinelRef,   // assign this to a <div ref={...} /> at the bottom
-    pageSize
+    pageSize,
+    refresh,
+    removeLocal,
+    restoreLocal,
   };
 }
