@@ -19,7 +19,7 @@ function errMsg(e: unknown) {
     }
 }
 
-export function AddItemPageInner() {
+function AddItemPageInner() {
     const router = useRouter();
     const params = useSearchParams();
     const editId = params.get("id");
