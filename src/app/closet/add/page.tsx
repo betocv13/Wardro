@@ -8,6 +8,7 @@ import {Label} from "@/components/ui/label";
 import {Button} from "@/components/ui/button";
 import {usePaletteFromImage} from "@/hooks/usePaletteFromImage";
 import {useSearchParams} from "next/navigation";
+import { Suspense } from "react";
 
 function errMsg(e: unknown) {
     if (e instanceof Error) return e.message;
@@ -18,7 +19,7 @@ function errMsg(e: unknown) {
     }
 }
 
-export default function AddItemPage() {
+export function AddItemPageInner() {
     const router = useRouter();
     const params = useSearchParams();
     const editId = params.get("id");
@@ -285,7 +286,7 @@ export default function AddItemPage() {
                 </div>
 
                 {file && preview && (
-                    <img ref={imgRef} src={preview} className="hidden" aria-hidden="true" decoding="async"/>
+                    <img ref={imgRef} src={preview} alt="" className="hidden" aria-hidden="true" decoding="async"/>
                 )}
 
                 <Button type="submit" disabled={!canSubmit} className="w-full">
@@ -295,5 +296,15 @@ export default function AddItemPage() {
 
             {msg && <p className="text-sm text-center text-muted-foreground">{msg}</p>}
         </main>
+    );
+}
+
+// keep everything you already have above … including AddItemPageInner
+
+export default function Page() {
+    return (
+        <Suspense fallback={<main className="p-6">Loading…</main>}>
+            <AddItemPageInner />
+        </Suspense>
     );
 }
