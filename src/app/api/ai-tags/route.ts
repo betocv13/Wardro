@@ -1,8 +1,15 @@
+// src/app/api/ai-tags/route.ts
 import { NextResponse } from "next/server";
+
+type OpenAIResponse = {
+    output?: Array<{
+        content?: Array<{ text?: string }>;
+    }>;
+};
 
 export async function POST(req: Request) {
     try {
-        const { imageUrl } = await req.json();
+        const { imageUrl } = (await req.json()) as { imageUrl?: string };
 
         if (!imageUrl) {
             return NextResponse.json({ error: "Missing imageUrl" }, { status: 400 });
@@ -23,7 +30,7 @@ export async function POST(req: Request) {
                             {
                                 type: "input_text",
                                 text:
-                                    `Return 3–6 concise style tags (lowercase, comma-separated). 
+                                    `Return 3–6 concise style tags (lowercase, comma-separated).
                    Example: "casual,streetwear,red,denim,minimal".`,
                             },
                             { type: "input_image", image_url: imageUrl },
@@ -33,13 +40,12 @@ export async function POST(req: Request) {
             }),
         });
 
-        const data = await res.json();
+        const data = (await res.json()) as OpenAIResponse;
 
-        // Try to parse text output into tags
-        const text = data?.output?.[0]?.content?.[0]?.text || "";
+        const text = data?.output?.[0]?.content?.[0]?.text ?? "";
         const tags = text
             .split(/[,|\n]/)
-            .map((t: string) => t.trim().toLowerCase())
+            .map((t) => t.trim().toLowerCase())
             .filter(Boolean);
 
         return NextResponse.json({ tags: Array.from(new Set(tags)).slice(0, 6) });

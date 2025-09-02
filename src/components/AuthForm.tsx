@@ -41,11 +41,6 @@ export default function AuthForm() {
     }
   }
 
-  async function signOut() {
-    await supabase.auth.signOut();
-    window.location.reload();
-  }
-
   return (
     <div className="space-y-4">
       <div className="flex gap-2 justify-center">
