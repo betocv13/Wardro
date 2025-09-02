@@ -8,6 +8,7 @@ import {Label} from "@/components/ui/label";
 import {Button} from "@/components/ui/button";
 import {usePaletteFromImage} from "@/hooks/usePaletteFromImage";
 import {useSearchParams} from "next/navigation";
+import TagInput from "@/components/TagInput";
 import { Suspense } from "react";
 
 function errMsg(e: unknown) {
@@ -30,6 +31,7 @@ function AddItemPageInner() {
     const [preview, setPreview] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
     const [msg, setMsg] = useState<string | null>(null);
+    const [tags, setTags] = useState<string[]>([]);
     const [palette, imgRef] = usePaletteFromImage(file ? preview : null, {
         maxColors: 4,
         paletteSize: 12,
@@ -63,7 +65,7 @@ function AddItemPageInner() {
 
             const {data, error} = await supabase
                 .from("clothes")
-                .select("name,type,image_url,palette")
+                .select("name,type,image_url,palette,tags")
                 .eq("id", editId)
                 .eq("user_id", userId)
                 .single();
@@ -72,6 +74,15 @@ function AddItemPageInner() {
 
             setName(data.name ?? "");
             setType((data.type ?? "top") as "top" | "bottom" | "shoes" | "accessories");
+            type DbClothing = {
+                name: string;
+                type: "top" | "bottom" | "shoes" | "accessories";
+                image_url?: string | null;
+                palette?: string[] | null;
+                tags?: string[] | null;
+            };
+            const row = data as DbClothing;
+            setTags(Array.isArray(row.tags) ? (row.tags as string[]).map(t => String(t)) : []);
 
             // Show existing image as the preview (optional). If you don’t want to re-extract
             // palette from the existing image, you can skip setting preview.
@@ -86,10 +97,27 @@ function AddItemPageInner() {
     setPreview(f ? URL.createObjectURL(f) : null);
   }
 
+    async function fetchAiTags(imageUrl: string): Promise<string[]> {
+        try {
+            const res = await fetch("/api/ai-tags", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ imageUrl }),
+            });
+            const data = (await res.json()) as { tags?: unknown[] };
+            const base = Array.isArray(data.tags) ? data.tags : [];
+            const normalized = base.map(t => String(t).trim().toLowerCase()).filter(Boolean);
+            return Array.from(new Set(normalized)).slice(0, 4);
+        } catch {
+            return [];
+        }
+    }
+
     async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
         e.preventDefault();
         setLoading(true);
         setMsg(null);
+
 
         const {data: userData, error: userErr} = await supabase.auth.getUser();
         if (userErr || !userData?.user) {
@@ -124,22 +152,35 @@ function AddItemPageInner() {
                     newPublicUrl = publicUrl;
                 }
 
+                const safeTags = tags
+                    .map(t => t.trim().toLowerCase())
+                    .filter(Boolean)
+                    .slice(0, 4);
+
                 type UpdatePayload = {
                     name: string;
                     type: "top" | "bottom" | "shoes" | "accessories";
                     image_url?: string;
                     palette?: string[] | null;
+                    tags?: string[] | null;
                 };
 
                 const updatePayload: UpdatePayload = {
                     name: name.trim(),
                     type,
+                    tags: safeTags.length ? safeTags : null,
                 };
 
-                // If a new image was uploaded, also update image_url and (optionally) palette
+                // ✅ ADD inside EDIT branch, after you compute safeTags and after you set newPublicUrl
                 if (newPublicUrl) {
+                    const aiTags = await fetchAiTags(newPublicUrl);
+                    const merged = Array.from(new Set([...safeTags, ...aiTags])).slice(0, 4);
+
                     updatePayload.image_url = newPublicUrl;
                     updatePayload.palette = palette && palette.length ? palette : null;
+                    updatePayload.tags = merged.length ? merged : null;
+
+                    setTags(merged); // reflect in UI
                 }
 
                 const {error: updErr} = await supabase
@@ -209,6 +250,17 @@ function AddItemPageInner() {
                             .eq("id", insertData.id)
                             .eq("user_id", userId);
 
+                        // ✅ ADD inside CREATE branch, right after updating image_url
+                        const aiTags = await fetchAiTags(publicUrl);
+                        if (aiTags.length) {
+                            await supabase
+                                .from("clothes")
+                                .update({ tags: aiTags })
+                                .eq("id", insertData.id)
+                                .eq("user_id", userId);
+                            // optional: setTags(aiTags);
+                        }
+
                         if (updErr) {
                             console.error("[db] update image_url failed:", updErr);
                             setMsg(`Saved item but failed to save image URL: ${updErr.message}`);
@@ -272,6 +324,21 @@ function AddItemPageInner() {
                     </select>
                 </div>
 
+                {isEditing && (
+                <div className="space-y-1">
+                    <Label htmlFor="tags">Tags</Label>
+                    <TagInput
+                        value={tags}
+                        onChange={setTags}
+                        placeholder="e.g. casual, summer, red"
+                        maxTags={4}
+                    />
+                    <p className="text-xs text-muted-foreground">
+                        Up to 4 tags. Press Enter/Comma/Tab/Space to add.
+                    </p>
+                </div>
+                )}
+
                 <div className="space-y-1">
                     <Label htmlFor="photo">Photo (optional)</Label>
                     <Input id="photo" type="file" accept="image/*" onChange={onFileChange}/>
@@ -304,7 +371,7 @@ function AddItemPageInner() {
 export default function Page() {
     return (
         <Suspense fallback={<main className="p-6">Loading…</main>}>
-            <AddItemPageInner />
+            <AddItemPageInner/>
         </Suspense>
     );
 }

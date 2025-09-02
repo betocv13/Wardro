@@ -14,6 +14,7 @@ export type ClothingItem = {
   created_at: string;
   image_url: string | null;
   palette?: string[] | null;
+  tags?: string[] | null;
 };
 
 function dedupeById<T extends { id: string }>(arr: T[]) {
@@ -53,7 +54,7 @@ export function usePagedClothes({ filterType, pageSize = 6 }: Options = {}) {
 
         let query = supabase
           .from("clothes")
-          .select("id,user_id,name,type,created_at,image_url,palette")
+          .select("id,user_id,name,type,created_at,image_url,palette, tags")
           .eq("user_id", session.user.id)
           .order("created_at", { ascending: false })
             .order("id", { ascending: false })
