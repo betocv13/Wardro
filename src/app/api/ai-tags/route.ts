@@ -43,7 +43,7 @@ export async function POST(req: Request) {
             .filter(Boolean);
 
         return NextResponse.json({ tags: Array.from(new Set(tags)).slice(0, 6) });
-    } catch (err: any) {
+    } catch (err: unknown) {
         return NextResponse.json({ error: String(err) }, { status: 500 });
     }
 }
