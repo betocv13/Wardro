@@ -53,22 +53,28 @@ export default function SideNav() {
 
           <nav className="space-y-1 text-sm">
             <a
-              href="/closet"
-              className="flex items-center gap-2 rounded-md px-3 py-2 hover:bg-accent"
+                href="/closet"
+                className="flex items-center gap-2 rounded-md px-3 py-2 hover:bg-accent"
             >
               <span>Closet</span>
+            </a>
+            <a
+                href="/outfits"
+                className="flex items-center gap-2 rounded-md px-3 py-2 hover:bg-accent"
+            >
+              <span>Outfits</span>
             </a>
           </nav>
         </div>
 
         <div className="mt-auto p-3">
-        <ThemeToggle />
-      </div>
-      
+          <ThemeToggle/>
+        </div>
+
         <div className="border-t p-3">
           <button
-            onClick={handleLogout}
-            className="w-full rounded-md border px-3 py-2 text-sm hover:bg-accent"
+              onClick={handleLogout}
+              className="w-full rounded-md border px-3 py-2 text-sm hover:bg-accent"
           >
             Log out
           </button>

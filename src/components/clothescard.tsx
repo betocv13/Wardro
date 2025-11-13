@@ -85,7 +85,7 @@ export default function ClothesCard({
           </div>
         </div>
 
-        <p className="mt-2 text-xs text-muted-foreground">Added {dateLabel}</p>
+
 
         {/* Color swatches */}
         {swatches.length > 0 && (
