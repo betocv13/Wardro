@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
-import { Plus } from "lucide-react";
+import { Plus, Sparkles } from "lucide-react";
 import ThemeToggle from "@/components/ThemeToggle";
 
 export default function SideNav() {
@@ -57,6 +57,13 @@ export default function SideNav() {
               className="flex items-center gap-2 rounded-md px-3 py-2 hover:bg-accent"
             >
               <span>Closet</span>
+            </a>
+            <a
+              href="/outfits"
+              className="flex items-center gap-2 rounded-md px-3 py-2 hover:bg-accent"
+            >
+              <Sparkles className="h-4 w-4" />
+              <span>AI Outfits</span>
             </a>
           </nav>
         </div>
