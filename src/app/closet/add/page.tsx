@@ -350,6 +350,7 @@ function AddItemPageInner() {
                 </div>
 
                 {file && preview && (
+                    /* eslint-disable-next-line @next/next/no-img-element */
                     <img ref={imgRef} src={preview} alt="" className="hidden" aria-hidden="true" decoding="async"/>
                 )}
 
