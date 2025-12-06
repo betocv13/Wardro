@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import DayNavigation from "./DayNavigation";
 import AIInsightPanel from "./AIInsightPanel";
-import PalletRow from "./PalletRow";
+import SwatchRow from "./PalletRow";
 import type { DayOutfitWithItems, WeatherDay } from "@/types/weekly-planner";
 
 type TodayOutfitProps = {
@@ -105,7 +105,7 @@ export default function TodayOutfit({
           {/* Color Palette */}
           {allColors.length > 0 && (
             <div className="flex justify-center">
-              <PalletRow palette={allColors} />
+              <SwatchRow colors={allColors} />
             </div>
           )}
         </div>
