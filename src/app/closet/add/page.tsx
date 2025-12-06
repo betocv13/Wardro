@@ -97,12 +97,17 @@ function AddItemPageInner() {
     setPreview(f ? URL.createObjectURL(f) : null);
   }
 
-    async function fetchAiTags(imageUrl: string): Promise<string[]> {
+    async function fetchAiTags(imageUrl: string, itemName: string, itemType: string, itemPalette: string[]): Promise<string[]> {
         try {
-            const res = await fetch("/api/ai-tags", {
+            const res = await fetch("/api/auto-tag", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ imageUrl }),
+                body: JSON.stringify({
+                    imageUrl,
+                    name: itemName,
+                    type: itemType,
+                    palette: itemPalette
+                }),
             });
             const data = (await res.json()) as { tags?: unknown[] };
             const base = Array.isArray(data.tags) ? data.tags : [];
@@ -173,7 +178,7 @@ function AddItemPageInner() {
 
                 // ✅ ADD inside EDIT branch, after you compute safeTags and after you set newPublicUrl
                 if (newPublicUrl) {
-                    const aiTags = await fetchAiTags(newPublicUrl);
+                    const aiTags = await fetchAiTags(newPublicUrl, name, type, palette);
                     const merged = Array.from(new Set([...safeTags, ...aiTags])).slice(0, 4);
 
                     updatePayload.image_url = newPublicUrl;
@@ -209,7 +214,6 @@ function AddItemPageInner() {
                     .single();
 
                 if (insertErr || !insertData) {
-                    console.error("DB insert failed:", insertErr);
                     setMsg(insertErr?.message ?? "Failed to create item");
                     setLoading(false);
                     return;
@@ -223,8 +227,6 @@ function AddItemPageInner() {
                         const orig = file.name || "image";
                         const ext = orig.includes(".") ? orig.split(".").pop() : "png";
                         const safeName = `${Date.now()}.${(ext || "png").toLowerCase()}`;
-
-                        console.log("[upload] starting via API", {userId, safeName, type: file.type, size: file.size});
 
                         const fd = new FormData();
                         fd.append("file", file);
@@ -242,7 +244,6 @@ function AddItemPageInner() {
                         }
 
                         const {publicUrl} = await res.json();
-                        console.log("[upload] success; publicUrl:", publicUrl);
 
                         const {error: updErr} = await supabase
                             .from("clothes")
@@ -251,7 +252,7 @@ function AddItemPageInner() {
                             .eq("user_id", userId);
 
                         // ✅ ADD inside CREATE branch, right after updating image_url
-                        const aiTags = await fetchAiTags(publicUrl);
+                        const aiTags = await fetchAiTags(publicUrl, name, type, palette);
                         if (aiTags.length) {
                             await supabase
                                 .from("clothes")
@@ -262,13 +263,11 @@ function AddItemPageInner() {
                         }
 
                         if (updErr) {
-                            console.error("[db] update image_url failed:", updErr);
                             setMsg(`Saved item but failed to save image URL: ${updErr.message}`);
                             setLoading(false);
                             return;
                         }
                     } catch (e: unknown) {
-                        console.error("[upload] unexpected error:", e);
                         setMsg(errMsg(e));
                         setLoading(false);
                         return;
@@ -280,7 +279,6 @@ function AddItemPageInner() {
                 return;
             }
         } catch (e: unknown) {
-            console.error(e);
             setMsg(errMsg(e));
         } finally {
             setLoading(false);
@@ -294,7 +292,6 @@ function AddItemPageInner() {
                 <p className="text-sm text-muted-foreground">
                     {isEditing ? "Update name, type, and optionally replace the photo." : "Add name, type, and an optional photo."}
                 </p>
-                <p className="text-sm text-muted-foreground">Add name, type, and an optional photo.</p>
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-4">
