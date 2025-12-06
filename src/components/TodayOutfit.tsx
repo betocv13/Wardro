@@ -48,17 +48,17 @@ export default function TodayOutfit({
         onNext={onNavigateNext}
       />
 
-      <div className="grid grid-cols-1 lg:grid-cols-[2fr_1fr] gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-[1.5fr_1fr] gap-6">
         {/* Left Side - Outfit Display */}
         <Card className="p-6 bg-card space-y-6">
           {/* Hero Item */}
-          <div className="relative aspect-square w-full rounded-lg overflow-hidden bg-white">
+          <div className="relative w-full rounded-lg overflow-hidden bg-white" style={{ maxHeight: "400px", aspectRatio: "1/1" }}>
             {dayOutfit.hero_item.image_url ? (
               <Image
                 src={dayOutfit.hero_item.image_url}
                 alt={dayOutfit.hero_item.name}
                 fill
-                sizes="(max-width: 1024px) 100vw, 60vw"
+                sizes="(max-width: 1024px) 100vw, 40vw"
                 className="object-contain"
                 priority
               />
