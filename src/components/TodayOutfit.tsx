@@ -48,46 +48,41 @@ export default function TodayOutfit({
         onNext={onNavigateNext}
       />
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-[2fr_1fr] gap-6">
         {/* Left Side - Outfit Display */}
-        <div className="lg:col-span-2 space-y-4">
+        <Card className="p-6 bg-card space-y-6">
           {/* Hero Item */}
-          <Card className="p-4 bg-white dark:bg-card">
-            <div className="relative aspect-square w-full max-w-md mx-auto rounded-lg overflow-hidden bg-white">
-              {dayOutfit.hero_item.image_url ? (
-                <Image
-                  src={dayOutfit.hero_item.image_url}
-                  alt={dayOutfit.hero_item.name}
-                  fill
-                  sizes="(max-width: 768px) 100vw, 50vw"
-                  className="object-contain"
-                  priority
-                />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center text-muted-foreground">
-                  No image
-                </div>
-              )}
-            </div>
-          </Card>
+          <div className="relative aspect-square w-full rounded-lg overflow-hidden bg-white">
+            {dayOutfit.hero_item.image_url ? (
+              <Image
+                src={dayOutfit.hero_item.image_url}
+                alt={dayOutfit.hero_item.name}
+                fill
+                sizes="(max-width: 1024px) 100vw, 60vw"
+                className="object-contain"
+                priority
+              />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center text-muted-foreground">
+                No image
+              </div>
+            )}
+          </div>
 
           {/* Supporting Items */}
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-3 gap-4">
             {dayOutfit.items
               .filter((item) => item.id !== dayOutfit.hero_item_id)
               .map((item) => (
-                <Card
-                  key={item.id}
-                  className="p-3 bg-white dark:bg-card aspect-square"
-                >
-                  <div className="relative w-full h-full rounded-md overflow-hidden bg-white">
+                <div key={item.id} className="space-y-2">
+                  <div className="relative aspect-square w-full rounded-lg overflow-hidden bg-white border border-border">
                     {item.image_url ? (
                       <Image
                         src={item.image_url}
                         alt={item.name}
                         fill
                         sizes="200px"
-                        className="object-contain"
+                        className="object-contain p-2"
                       />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center text-xs text-muted-foreground">
@@ -95,20 +90,20 @@ export default function TodayOutfit({
                       </div>
                     )}
                   </div>
-                  <p className="text-xs mt-2 truncate text-center">
+                  <p className="text-xs text-center truncate text-muted-foreground">
                     {item.name}
                   </p>
-                </Card>
+                </div>
               ))}
           </div>
 
           {/* Color Palette */}
           {allColors.length > 0 && (
-            <div className="flex justify-center">
+            <div className="pt-2">
               <SwatchRow colors={allColors} />
             </div>
           )}
-        </div>
+        </Card>
 
         {/* Right Side - AI Insights */}
         <div className="space-y-4">

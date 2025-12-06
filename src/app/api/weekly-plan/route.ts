@@ -249,8 +249,10 @@ export async function POST(req: Request) {
     const result: GenerateWeekResponse = { plan: plan as WeeklyPlan };
     return NextResponse.json(result);
   } catch (err) {
+    console.error("Weekly plan POST error:", err);
+    console.error("Error stack:", err instanceof Error ? err.stack : "No stack trace");
     return NextResponse.json(
-      { error: String(err) },
+      { error: err instanceof Error ? err.message : String(err) },
       { status: 500 }
     );
   }

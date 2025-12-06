@@ -140,8 +140,22 @@ export function useWeeklyPlan() {
 
         const data = await res.json();
 
+        console.log("generateWeek response:", {
+          status: res.status,
+          ok: res.ok,
+          data,
+        });
+
+        if (!res.ok) {
+          throw new Error(data.error || `Server error: ${res.status}`);
+        }
+
         if (data.error) {
           throw new Error(data.error);
+        }
+
+        if (!data.plan) {
+          throw new Error("No plan data received from server");
         }
 
         setWeeklyPlan(data.plan);
