@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
-import { Plus, Sparkles } from "lucide-react";
+import { Plus, Sparkles, Zap } from "lucide-react";
 import ThemeToggle from "@/components/ThemeToggle";
 
 export default function SideNav() {
@@ -63,7 +63,14 @@ export default function SideNav() {
               className="flex items-center gap-2 rounded-md px-3 py-2 hover:bg-accent"
             >
               <Sparkles className="h-4 w-4" />
-              <span>AI Outfits</span>
+              <span>Weekly Planner</span>
+            </a>
+            <a
+              href="/outfits/generate"
+              className="flex items-center gap-2 rounded-md px-3 py-2 hover:bg-accent"
+            >
+              <Zap className="h-4 w-4" />
+              <span>Quick Outfit</span>
             </a>
           </nav>
         </div>

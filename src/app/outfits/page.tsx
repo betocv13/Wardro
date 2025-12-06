@@ -1,21 +1,31 @@
 // src/app/outfits/page.tsx
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Sparkles, RefreshCw } from "lucide-react";
+import { Sparkles } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
-import OccasionFilter from "@/components/OccasionFilter";
-import OutfitGrid from "@/components/OutfitGrid";
-import { useOutfitSuggestions } from "@/hooks/useOutfitSuggestions";
-import type { Occasion } from "@/types/outfits";
+import { useWeeklyPlan } from "@/hooks/useWeeklyPlan";
+import { useWeather } from "@/hooks/useWeather";
+import TodayOutfit from "@/components/TodayOutfit";
 
 export default function OutfitsPage() {
   const router = useRouter();
-  const [occasion, setOccasion] = useState<Occasion>("any");
-  const { outfits, loading, error, generateOutfits, regenerate } =
-    useOutfitSuggestions();
+  const {
+    weeklyPlan,
+    currentDayWithItems,
+    loading,
+    generating,
+    regenerating,
+    error,
+    generateWeek,
+    regenerateDay,
+    navigateToDay,
+    selectedDayIndex,
+  } = useWeeklyPlan();
+
+  const { weather } = useWeather();
 
   // Auth check
   useEffect(() => {
@@ -24,91 +34,135 @@ export default function OutfitsPage() {
     });
   }, [router]);
 
-  // Auto-generate on first load
-  useEffect(() => {
-    if (outfits.length === 0 && !loading && !error) {
-      generateOutfits({ occasion: "any", count: 6 });
+  const handleGenerate = async () => {
+    try {
+      await generateWeek();
+    } catch (err) {
+      // Error is already set in hook
     }
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
-
-  const handleGenerate = () => {
-    generateOutfits({ occasion, count: 6 });
   };
 
-  const handleRegenerate = () => {
-    regenerate({ occasion, count: 6 });
+  const handleRegenerateDay = async () => {
+    try {
+      await regenerateDay(selectedDayIndex);
+    } catch (err) {
+      // Error is already set in hook
+    }
   };
 
-  const handleOccasionChange = (newOccasion: Occasion) => {
-    setOccasion(newOccasion);
-    // Auto-generate when occasion changes
-    generateOutfits({ occasion: newOccasion, count: 6 });
+  const handlePrevDay = () => {
+    navigateToDay(selectedDayIndex - 1);
   };
 
-  return (
-    <main className="p-6 space-y-6 max-w-7xl mx-auto">
-      {/* Header */}
-      <div className="space-y-2">
-        <div className="flex items-center gap-2">
-          <Sparkles className="w-6 h-6 text-primary" />
-          <h1 className="text-3xl font-bold">AI Outfit Suggestions</h1>
+  const handleNextDay = () => {
+    navigateToDay(selectedDayIndex + 1);
+  };
+
+  if (loading) {
+    return (
+      <main className="p-6 max-w-7xl mx-auto">
+        <div className="space-y-6">
+          <div className="flex items-center gap-2">
+            <Sparkles className="w-6 h-6 text-primary" />
+            <h1 className="text-3xl font-bold">Weekly Planner</h1>
+          </div>
+          <div className="text-center py-12">
+            <p className="text-muted-foreground">Loading your weekly plan...</p>
+          </div>
         </div>
-        <p className="text-muted-foreground">
-          Get personalized outfit combinations based on your wardrobe
-        </p>
-      </div>
+      </main>
+    );
+  }
 
-      {/* Filters */}
-      <div className="space-y-4">
-        <OccasionFilter selected={occasion} onChange={handleOccasionChange} />
+  // Empty state - no plan exists
+  if (!weeklyPlan) {
+    return (
+      <main className="p-6 max-w-7xl mx-auto">
+        <div className="space-y-6">
+          <div className="flex items-center gap-2">
+            <Sparkles className="w-6 h-6 text-primary" />
+            <h1 className="text-3xl font-bold">Weekly Planner</h1>
+          </div>
 
-        {/* Action Buttons */}
-        <div className="flex gap-2">
-          <Button onClick={handleGenerate} disabled={loading}>
-            <Sparkles className="w-4 h-4 mr-2" />
-            {loading ? "Generating..." : "Generate Outfits"}
-          </Button>
-
-          {outfits.length > 0 && (
+          <div className="text-center py-12 space-y-4">
+            <div className="max-w-md mx-auto space-y-2">
+              <h2 className="text-xl font-semibold">No Weekly Plan Yet</h2>
+              <p className="text-muted-foreground">
+                Generate a 7-day outfit plan based on your closet and weather
+                forecast
+              </p>
+              {error && (
+                <div className="bg-destructive/10 text-destructive px-4 py-3 rounded-md text-sm mt-4">
+                  {error}
+                </div>
+              )}
+            </div>
             <Button
-              variant="outline"
-              onClick={handleRegenerate}
-              disabled={loading}
+              onClick={handleGenerate}
+              disabled={generating}
+              size="lg"
+              className="mt-4"
             >
-              <RefreshCw className="w-4 h-4 mr-2" />
-              Regenerate
+              <Sparkles className="w-4 h-4 mr-2" />
+              {generating ? "Generating..." : "Generate Weekly Plan"}
             </Button>
-          )}
-        </div>
-      </div>
-
-      {/* Error Message */}
-      {error && (
-        <div className="bg-destructive/10 text-destructive px-4 py-3 rounded-md text-sm">
-          {error}
-        </div>
-      )}
-
-      {/* Outfit Grid */}
-      <OutfitGrid outfits={outfits} loading={loading} />
-
-      {/* Empty State Help */}
-      {!loading && outfits.length === 0 && !error && (
-        <div className="text-center py-12 space-y-4">
-          <div className="text-muted-foreground">
-            <p className="text-lg mb-2">No outfits yet</p>
-            <p className="text-sm">
-              Make sure you have at least a few items in your closet
-            </p>
-            <p className="text-sm">
-              (You need tops, bottoms, and shoes to create outfits)
+            <p className="text-xs text-muted-foreground mt-2">
+              Requires at least 5 tops, 3 bottoms, and 2 pairs of shoes
             </p>
           </div>
-          <Button onClick={() => router.push("/closet/add")} variant="outline">
-            Add Items to Closet
+        </div>
+      </main>
+    );
+  }
+
+  // Show today's outfit
+  const currentWeather = weather[selectedDayIndex];
+
+  return (
+    <main className="p-6 max-w-7xl mx-auto">
+      <div className="space-y-6">
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Sparkles className="w-6 h-6 text-primary" />
+            <h1 className="text-3xl font-bold">Weekly Planner</h1>
+          </div>
+          <Button
+            onClick={handleGenerate}
+            disabled={generating}
+            variant="outline"
+          >
+            <Sparkles className="w-4 h-4 mr-2" />
+            {generating ? "Regenerating Week..." : "Regenerate Week"}
           </Button>
         </div>
-      )}
+
+        {/* Error Display */}
+        {error && (
+          <div className="bg-destructive/10 text-destructive px-4 py-3 rounded-md text-sm">
+            {error}
+          </div>
+        )}
+
+        {/* Today's Outfit */}
+        {currentDayWithItems ? (
+          <TodayOutfit
+            dayOutfit={currentDayWithItems}
+            weather={currentWeather}
+            currentDayIndex={selectedDayIndex}
+            onNavigatePrev={handlePrevDay}
+            onNavigateNext={handleNextDay}
+            onRegenerate={handleRegenerateDay}
+            regenerating={regenerating}
+          />
+        ) : (
+          <div className="text-center py-12">
+            <p className="text-muted-foreground">
+              Loading outfit for this day...
+            </p>
+          </div>
+        )}
+      </div>
     </main>
   );
 }
