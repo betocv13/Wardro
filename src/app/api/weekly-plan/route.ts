@@ -83,10 +83,18 @@ export async function GET(req: Request) {
     if (fetchError) {
       if (fetchError.code === "PGRST116") {
         // No plan found
+        console.log("No weekly plan found for user", user.id, "week", weekStart);
         return NextResponse.json({ plan: null });
       }
+      console.error("Error fetching weekly plan:", fetchError);
       throw fetchError;
     }
+
+    console.log("Found weekly plan:", {
+      id: plan.id,
+      week_start: plan.week_start,
+      outfits_count: Array.isArray(plan.outfits) ? plan.outfits.length : 0,
+    });
 
     return NextResponse.json({ plan: plan as WeeklyPlan });
   } catch (err) {
@@ -132,6 +140,8 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Invalid session" }, { status: 401 });
     }
 
+    console.log("Generating weekly plan for user:", user.id);
+
     // Fetch user's clothing items
     const { data: items, error: fetchError } = await supabase
       .from("clothes")
@@ -140,11 +150,14 @@ export async function POST(req: Request) {
       .order("created_at", { ascending: false });
 
     if (fetchError) {
+      console.error("Error fetching items:", fetchError);
       return NextResponse.json(
         { error: "Failed to fetch items" },
         { status: 500 }
       );
     }
+
+    console.log("Fetched items count:", items?.length || 0);
 
     if (!items || items.length < 5) {
       return NextResponse.json({
@@ -163,6 +176,13 @@ export async function POST(req: Request) {
       ["accessories", "hat"].includes(i.type)
     );
 
+    console.log("Items by type:", {
+      tops: tops.length,
+      bottoms: bottoms.length,
+      shoes: shoes.length,
+      accessories: accessories.length,
+    });
+
     // Validate minimum requirements
     if (tops.length < 5 || bottoms.length < 3 || shoes.length < 2) {
       return NextResponse.json({
@@ -176,11 +196,16 @@ export async function POST(req: Request) {
     const lon = location?.lon || -74.006;
 
     const weatherUrl = `${req.headers.get("origin") || "http://localhost:3000"}/api/weather?lat=${lat}&lon=${lon}`;
+    console.log("Fetching weather from:", weatherUrl);
+
     const weatherRes = await fetch(weatherUrl);
     const weatherData = await weatherRes.json();
     const weather: WeatherDay[] = weatherData.forecast || [];
 
+    console.log("Weather forecast days:", weather.length);
+
     // Generate 7-day plan with OpenAI
+    console.log("Calling OpenAI to generate weekly outfits...");
     const outfits = await generateWeeklyOutfits(
       items as ClothingItemExtended[],
       { tops, bottoms, shoes, accessories },
@@ -188,14 +213,18 @@ export async function POST(req: Request) {
     );
 
     if (!outfits || outfits.length !== 7) {
+      console.error("Failed to generate complete weekly plan. Outfits:", outfits?.length || 0);
       return NextResponse.json({
         error: "Failed to generate complete weekly plan",
       });
     }
 
+    console.log("Successfully generated 7 day outfits");
+
     // Save to database
     const weekStart = getMondayOfWeek();
 
+    console.log("Saving weekly plan to database...");
     const { data: plan, error: saveError } = await supabase
       .from("weekly_plans")
       .upsert(
@@ -211,8 +240,11 @@ export async function POST(req: Request) {
       .single();
 
     if (saveError) {
+      console.error("Error saving weekly plan:", saveError);
       throw saveError;
     }
+
+    console.log("Successfully saved weekly plan:", plan.id);
 
     const result: GenerateWeekResponse = { plan: plan as WeeklyPlan };
     return NextResponse.json(result);
@@ -297,8 +329,11 @@ Return ONLY valid JSON in this exact format:
 
   try {
     if (!process.env.OPENAI_API_KEY) {
+      console.error("OpenAI API key not configured");
       throw new Error("OpenAI API key not configured");
     }
+
+    console.log("Sending request to OpenAI...");
 
     const res = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
@@ -317,13 +352,17 @@ Return ONLY valid JSON in this exact format:
     const data = await res.json();
 
     if (!res.ok) {
+      console.error("OpenAI API error:", data);
       throw new Error(data?.error?.message || "OpenAI request failed");
     }
 
     const content = data.choices?.[0]?.message?.content;
     if (!content) {
+      console.error("No content in OpenAI response:", data);
       throw new Error("No response from OpenAI");
     }
+
+    console.log("Received response from OpenAI, parsing...");
 
     const parsed = JSON.parse(content);
     const outfitResults: DayOutfit[] = [];

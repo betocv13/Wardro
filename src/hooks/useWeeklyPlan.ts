@@ -84,6 +84,7 @@ export function useWeeklyPlan() {
 
       if (!session) {
         setError("Not authenticated");
+        setLoading(false);
         return;
       }
 
@@ -95,12 +96,19 @@ export function useWeeklyPlan() {
 
       const data = await res.json();
 
+      console.log("Weekly plan response:", data);
+
+      if (!res.ok) {
+        throw new Error(data.error || `API error: ${res.status}`);
+      }
+
       if (data.error) {
         throw new Error(data.error);
       }
 
       setWeeklyPlan(data.plan);
     } catch (err) {
+      console.error("fetchPlan error:", err);
       setError(err instanceof Error ? err.message : String(err));
     } finally {
       setLoading(false);
@@ -243,6 +251,13 @@ export function useWeeklyPlan() {
       dayOutfit.suggested_accessory_ids.includes(item.id)
     );
 
+    console.log("populateDayWithItems:", {
+      dayOutfit,
+      itemsFound: items.length,
+      heroItemFound: !!heroItem,
+      allItemsCount: allItems.length,
+    });
+
     if (heroItem) {
       setCurrentDayWithItems({
         ...dayOutfit,
@@ -250,6 +265,21 @@ export function useWeeklyPlan() {
         hero_item: heroItem,
         suggested_accessories: suggestedAccessories,
       });
+    } else {
+      console.error("Hero item not found! hero_item_id:", dayOutfit.hero_item_id);
+      // Fallback: use first item as hero if hero item not found
+      const fallbackHero = items[0] || allItems[0];
+      if (fallbackHero) {
+        console.log("Using fallback hero item:", fallbackHero.id);
+        setCurrentDayWithItems({
+          ...dayOutfit,
+          items,
+          hero_item: fallbackHero,
+          suggested_accessories: suggestedAccessories,
+        });
+      } else {
+        setError("No items found for this outfit");
+      }
     }
   }
 

@@ -107,6 +107,13 @@ export async function POST(
     const weather = plan.weather_data as any[];
     const dayWeather = weather?.[dayIndex];
 
+    console.log("Regenerating day:", {
+      day,
+      dayIndex,
+      hasWeather: !!dayWeather,
+      itemsCount: items.length,
+    });
+
     // Get items already used this week (to avoid repeats)
     const outfits = plan.outfits as DayOutfit[];
     const usedItemIds = new Set<string>();
@@ -132,11 +139,14 @@ export async function POST(
     );
 
     if (!newOutfit) {
+      console.error("generateDayOutfit returned null");
       return NextResponse.json(
-        { error: "Failed to generate outfit" },
+        { error: "Failed to generate outfit. Please try again." },
         { status: 500 }
       );
     }
+
+    console.log("Generated new outfit:", newOutfit);
 
     // Update plan
     outfits[dayIndex] = {
@@ -230,8 +240,11 @@ Return ONLY JSON:
 
   try {
     if (!process.env.OPENAI_API_KEY) {
+      console.error("OpenAI API key not configured");
       throw new Error("OpenAI API key not configured");
     }
+
+    console.log("Calling OpenAI for day outfit generation...");
 
     const res = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
@@ -250,15 +263,18 @@ Return ONLY JSON:
     const data = await res.json();
 
     if (!res.ok) {
+      console.error("OpenAI API error:", data);
       throw new Error(data?.error?.message || "OpenAI request failed");
     }
 
     const content = data.choices?.[0]?.message?.content;
     if (!content) {
+      console.error("No content in OpenAI response:", data);
       throw new Error("No response from OpenAI");
     }
 
     const parsed = JSON.parse(content);
+    console.log("Parsed OpenAI response:", parsed);
 
     return {
       day,
@@ -273,6 +289,11 @@ Return ONLY JSON:
     };
   } catch (err) {
     console.error("Failed to generate day outfit:", err);
+    console.error("Error details:", {
+      name: err instanceof Error ? err.name : "Unknown",
+      message: err instanceof Error ? err.message : String(err),
+      stack: err instanceof Error ? err.stack : undefined,
+    });
     return null;
   }
 }
