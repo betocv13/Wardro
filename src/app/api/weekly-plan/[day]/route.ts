@@ -26,10 +26,10 @@ function getMondayOfWeek(): string {
 
 export async function PATCH(
   req: Request,
-  { params }: { params: { day: string } }
+  { params }: { params: Promise<{ day: string }> }
 ) {
   try {
-    const { day } = params;
+    const { day } = await params;
 
     if (!DAYS_OF_WEEK.includes(day as DayOfWeek)) {
       return NextResponse.json({ error: "Invalid day" }, { status: 400 });
